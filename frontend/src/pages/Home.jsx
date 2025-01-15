@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import api from "../api";
-import Note from "../components/Note"
-import "../styles/Home.css"
+import { notesAPI } from "../api";
+import Note from "../components/Note";
+import "../styles/Home.css";
+import Header from "../components/Header";
 
 function Home() {
     const [notes, setNotes] = useState([]);
@@ -12,72 +13,67 @@ function Home() {
         getNotes();
     }, []);
 
-    const getNotes = () => {
-        api
-            .get("/api/notes/")
-            .then((res) => res.data)
-            .then((data) => {
-                setNotes(data);
-                console.log(data);
-            })
-            .catch((err) => alert(err));
+    const getNotes = async () => {
+        try {
+            const res = await notesAPI.getAll();
+            setNotes(res.data);
+        } catch (error) {
+            alert(error.response?.data?.detail || "Failed to fetch notes");
+        }
     };
 
-    const deleteNote = (id) => {
-        api
-            .delete(`/api/notes/delete/${id}/`)
-            .then((res) => {
-                if (res.status === 204) alert("Note deleted!");
-                else alert("Failed to delete note.");
-                getNotes();
-            })
-            .catch((error) => alert(error));
+    const deleteNote = async (id) => {
+        try {
+            await notesAPI.delete(id);
+            alert("Note deleted!");
+            getNotes();
+        } catch (error) {
+            alert(error.response?.data?.detail || "Failed to delete note");
+        }
     };
 
-    const createNote = (e) => {
+    const createNote = async (e) => {
         e.preventDefault();
-        api
-            .post("/api/notes/", { content, title })
-            .then((res) => {
-                if (res.status === 201) alert("Note created!");
-                else alert("Failed to make note.");
-                getNotes();
-            })
-            .catch((err) => alert(err));
+        try {
+            await notesAPI.create({ content, title });
+            alert("Note created!");
+            setContent("");
+            setTitle("");
+            getNotes();
+        } catch (error) {
+            alert(error.response?.data?.detail || "Failed to create note");
+        }
     };
 
     return (
         <div>
-            <div>
-                <h2>Notes</h2>
-                {notes.map((note) => (
-                    <Note note={note} onDelete={deleteNote} key={note.id} />
-                ))}
-            </div>
-            <h2>Create a Note</h2>
-            <form onSubmit={createNote}>
-                <label htmlFor="title">Title:</label>
-                <br />
-                <input
+            <Header />
+            <div className="home">
+                <form onSubmit={createNote}>
+                    <input
                     type="text"
-                    id="title"
-                    name="title"
-                    required
-                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Title"
                     value={title}
+                    onChange={(e) => setTitle(e.target.value)}
                 />
-                <label htmlFor="content">Content:</label>
-                <br />
                 <textarea
-                    id="content"
-                    name="content"
-                    required
+                    placeholder="Content"
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
-                ></textarea>
-                <br />
-                <input type="submit" value="Submit"></input>
+                />
+                <button type="submit">Create Note</button>
             </form>
+
+            <div className="notes">
+                {notes.map((note) => (
+                    <Note
+                        key={note.id}
+                        note={note}
+                        onDelete={() => deleteNote(note.id)}
+                    />
+                ))}
+            </div>
+        </div>
         </div>
     );
 }

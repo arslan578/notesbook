@@ -1,5 +1,7 @@
 import { useState } from "react";
 import api from "../api";
+import { authAPI } from "../api";
+
 import { useNavigate } from "react-router-dom";
 import { ACCESS_TOKEN, REFRESH_TOKEN } from "../constants";
 import "../styles/Form.css"
@@ -12,24 +14,24 @@ function Form({ route, method }) {
     const navigate = useNavigate();
 
     const name = method === "login" ? "Login" : "Register";
-
     const handleSubmit = async (e) => {
         setLoading(true);
         e.preventDefault();
 
         try {
-            const res = await api.post(route, { username, password })
             if (method === "login") {
+                const res = await authAPI.login({ username, password });  // Use authAPI instead of direct api call
                 localStorage.setItem(ACCESS_TOKEN, res.data.access);
                 localStorage.setItem(REFRESH_TOKEN, res.data.refresh);
-                navigate("/")
+                navigate("/");
             } else {
-                navigate("/login")
+                await authAPI.register({ username, password });  // Use authAPI
+                navigate("/login");
             }
         } catch (error) {
-            alert(error)
+            alert(error.response?.data?.detail || "An error occurred");
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
     };
 
