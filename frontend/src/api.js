@@ -24,7 +24,7 @@ api.interceptors.request.use(
 // API endpoints
 export const authAPI = {
   login: (credentials) => api.post("/api/token/", credentials),
-  register: (userData) => api.post("/api/user/register/", userData),
+  register: (userData) => api.post("/api/user/", userData),
   refresh: (refresh_token) => api.post("/api/token/refresh/", { refresh: refresh_token }),
   logout: (data) => api.post("/api/user/logout/", data),
 };
